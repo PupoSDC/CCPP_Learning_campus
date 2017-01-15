@@ -29,8 +29,9 @@ int main() {
 
     for (int i = 0; i < numberoflines; i++)                // For every line read
     {
-        reorganize(words[i]);
-        // printf("before: %s \n", reorganize(words[i]) );                         // Print the line        
+        printf("before: %s \n", words[i] );    
+        reorganize(words[i]);                     // Print the line      
+        //printf("after: %s \n",  reorganize(words[i]) );                         // Print the line        
     }
 
     return 0;
@@ -48,8 +49,6 @@ char* reorganize(char *line) {
     int  i             = 0; // Loop variable
     int  j             = 0; // Loop variable
 
-    printf("before: %s \n", line );
-
     for ( i = 0; i < strlen(line); i++)
     {
         if(line[i] == ' ') numberofwords++;
@@ -57,22 +56,22 @@ char* reorganize(char *line) {
     
     words = malloc( sizeof(char*) * (numberofwords + 1) );
     
-    while ( (word = strsep(&line, " ")) != NULL)
-    {
-        printf("%s\n",word);
-        strcpy(words[j],word);  // <-- aqui 
+    for( i = 0; i < numberofwords; i++)
+    {   
+        word = strsep(&line, " ");
+        strcpy(words[j],word);  
     }
 
-/*
-    strcpy(response,words[numberofwords -1]);
+    strcpy(response, words[0]);
 
-    for (i = numberofwords; i > 0; i-- )
+    //printf("after: %s \n",  response );
+
+    /*
+    for (i = numberofwords -2; i > 0; i-- )
     {
         strcat(response," ");
         strcat(response,words[i]);
-    }
-
-    printf("after: %s \n", response ); */
+    } */
 
     return response;
 }
