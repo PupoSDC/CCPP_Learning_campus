@@ -31,7 +31,8 @@ int readfile(char **words, const char *inputfile) {
     FILE *file;                                     // Alocate file memory
     file = fopen(inputfile, "r");                   // Open file with read permission
     if (file == NULL) return 0;                     // If no file return 0 lines read
- 
+    
+    int     line_length;                            // Length of a single line 
     int     numberoflines;                          // Total number of lines
     char    line[1000];                             // Buffer for each line
  
@@ -45,20 +46,16 @@ int readfile(char **words, const char *inputfile) {
 
     for (int i = 0; i < numberoflines; i++)         // For every line
     {
-        fgets(line, sizeof(line), file);                // Gets a line                      
-        words[i] = malloc(strlen(line) + 1);            // Allocates line memory in array
-        words[i] = line;                                // Stores line in array
-        printf("%s", words[i] );  
-    }
+        fgets(line, sizeof(line), file);                // Gets a line  
+
+        line_length = strlen(line);                     // Defines the line length
+        line[line_length - 1] = '\0';                   // Removes /n
+        line_length--;                                  // Updates line lenght
+
+        words[i] = malloc(line_length + 1);             // Allocates line memory in array
+        strcpy(words[i], line);                         // Stores line in array
+    } 
 
     fclose(file);                                   // Closes file
-
-    printf("Retrieved %d lines \n",numberoflines);  // Reports number of lines read
-
-    for (int j = 0; j < numberoflines; j++)         // For every line read
-    {
-        printf("%s", words[j] );                   
-    }
-
     return numberoflines;                           // Returns number of lines read
 }
