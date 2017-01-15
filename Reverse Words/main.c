@@ -55,14 +55,15 @@ char* reorganize(char *line) {
         if(line[i] == ' ') numberofwords++;
     }
     
-    words = malloc( sizeof(char*) * (numberofwords + 2) );
+    words = malloc( sizeof(char*) * (numberofwords + 1) );
     
     while ( (word = strsep(&line, " ")) != NULL)
     {
         printf("%s\n",word);
-        words[j] = word;
+        strcpy(words[j],word);  // <-- aqui 
     }
 
+/*
     strcpy(response,words[numberofwords -1]);
 
     for (i = numberofwords; i > 0; i-- )
@@ -71,7 +72,7 @@ char* reorganize(char *line) {
         strcat(response,words[i]);
     }
 
-    printf("after: %s \n", response );
+    printf("after: %s \n", response ); */
 
     return response;
 }
