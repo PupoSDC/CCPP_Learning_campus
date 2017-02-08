@@ -3,7 +3,7 @@
 #include <string>
 #include <iostream>
 #include <iomanip>
-
+#include <fstream>
 
 using namespace std;
 
@@ -31,8 +31,8 @@ public:
 
 	void   setField(string field, double begincoord, double endcoord, double value);
 	int    checkFields();
-	void   printVTK();
-	
+	void   printVTK(double timestep);
+
 	/*
 	void   setBoundaries(double speedtop, double speedbottom);
 	void   setPhisicalProperties(double viscosityinput);

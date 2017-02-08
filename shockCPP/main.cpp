@@ -14,13 +14,18 @@
 int main()
 {
   
-    Mesh mesh(-7.0,7.0,3); //141
+    Mesh mesh(-7.0,7.0,141); //141
 
-    mesh.setField("velocity",-7,7,100);
-    mesh.setField("pressure",-7,7,100);
-    mesh.setField("temperature",-7,7,100);
+    mesh.setField("velocity",-7,7,10);
 
-    if( mesh.checkFields() == -1){ cout << "\nProgram Terminated! \n"; }
+    mesh.setField("pressure",-7,0,100000);
+    mesh.setField("pressure", 0,7,20000);
+
+    mesh.setField("temperature",-7,7,273);
+
+    if( mesh.checkFields() == -1){ cout << "\nProgram Terminated! \n"; return 0; }
+
+    mesh.printVTK(0);
 
     return 0;
 }
