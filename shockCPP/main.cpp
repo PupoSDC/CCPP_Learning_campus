@@ -16,14 +16,17 @@ int main()
   
     Mesh mesh(-7.0,7.0,141); //141
 
-    mesh.setField("velocity",-7,7,10);
+    mesh.setField("velocity"   ,-7 , 7,     0);
+    mesh.setField("pressure"   ,-7 , 0,988000);
+    mesh.setField("pressure"   , 0 , 7, 99300);
+    mesh.setField("temperature",-7 , 0,  2438);
+    mesh.setField("temperature", 0 , 7,  2452);
 
-    mesh.setField("pressure",-7,0,100000);
-    mesh.setField("pressure", 0,7,20000);
-
-    mesh.setField("temperature",-7,7,273);
+    mesh.initiateThermoPhysicalProperties(1.005,0.718);
 
     if( mesh.checkFields() == -1){ cout << "\nProgram Terminated! \n"; return 0; }
+
+    
 
     mesh.printVTK(0);
 

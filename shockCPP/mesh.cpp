@@ -6,16 +6,14 @@ Mesh::Mesh(double meshbegin, double meshend, int numberofmeshpoints)
 	totalsize       = meshend-meshbegin;
 	firstcoordinate = meshbegin; 
 	delta           = totalsize/(numberofpoints - 1);
-	
-	boundaryset    = false;
-	propertiesset  = false;
-	
-	points  = new vector<double>(numberofmeshpoints); 
-  	U       = new vector<double>(numberofmeshpoints); 
-	E       = new vector<double>(numberofmeshpoints); 
-	T       = new vector<double>(numberofmeshpoints);
-	p       = new vector<double>(numberofmeshpoints); 
-	rho     = new vector<double>(numberofmeshpoints);
+		
+	points  = new vector<double>(numberofmeshpoints,-123456789); 
+  	U       = new vector<double>(numberofmeshpoints,-123456789); 
+	E       = new vector<double>(numberofmeshpoints,-123456789); 
+	T       = new vector<double>(numberofmeshpoints,-123456789);
+	p       = new vector<double>(numberofmeshpoints,-123456789); 
+	rho     = new vector<double>(numberofmeshpoints,-123456789);
+	macno   = new vector<double>(numberofmeshpoints,-123456789);
 	
 	for( int i = 0; i < numberofpoints; i++)
 	{
@@ -64,17 +62,17 @@ int Mesh::checkFields()
 
 	for( int i = 0; i < numberofpoints; i++)
 	{
-		if ( !(*U)[i] )
+		if ( (*U)[i] == -123456789 )
 		{
 			cout << "    Velocity    is undefined for point" << std::setw(4) << i <<", coordinate" << std::setw(4) << (*points)[i] << "!\n";
 			error = true;
 		}
-		if ( !(*T)[i] )
+		if ( (*T)[i] == -123456789 )
 		{
 			cout << "    Temperature is undefined for point"<< std::setw(4) << i <<", coordinate" << std::setw(4) << (*points)[i] << "!\n";
 			error = true;
 		}
-		if ( !(*p)[i] )
+		if ( (*p)[i] == -123456789 )
 		{
 			cout << "    Pressure    is undefined for point"<< std::setw(4) << i <<", coordinate" << std::setw(4) << (*points)[i] << "!\n";
 			error = true;
@@ -92,13 +90,39 @@ int Mesh::checkFields()
 	}
 }
 
+void Mesh::initiateThermoPhysicalProperties(double cpinput, double cvinput)
+{
+	// assuming T,p and U are defined, updates rho, E and Mac speed.
+	// Sets constanc k,cp and cv
+
+	cv = cvinput;
+	cp = cpinput;
+	k  = cp/cv;
+
+	for (int i = 0; i<numberofpoints; i++)
+	{
+		(*E)[i]     = cv * (*T)[i] + (1/2) * pow((*U)[i],2);
+		(*rho)[i]   = (*p)[i] / (k * cv * (*T)[i]);
+		(*macno)[i] = sqrt( k * (*p)[i] / (*rho)[i]);
+	}	
+}
+
+void Mesh::updateThermoPhysicalProperties()
+{
+
+}
+
 void Mesh::printVTK(double timestep)
 {
+	// Prints the current velocity, temperature and pressure to a file 
+	// using vtk file format
+	// TODO: Implement timestep
+
 	ofstream myfile ("results.vtk");
 
-	vector<double>* vectorstoprint [3] = { U,T,p }; 
-	string          vectornames    [3] = { "velocity", "Temperature", "Pressure" };
-	int             nofvectorstoprint  = 3;
+	vector<double>* vectorstoprint [6] = { E,U,T,p,rho,macno }; 
+	string          vectornames    [6] = { "energy","Velocity", "Temperature", "Pressure","rho","macno" };
+	int             nofvectorstoprint  = 6;
 
 	if (myfile.is_open())
 	{

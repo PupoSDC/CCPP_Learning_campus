@@ -12,11 +12,7 @@ class Mesh {
 	double              totalsize;
 	double              firstcoordinate;
 	double				delta;
-
 	int                 numberofpoints;
-
-	bool                boundaryset;
-	bool                propertiesset;
 
 	vector<double> *points;
 	vector<double> *U;
@@ -24,6 +20,11 @@ class Mesh {
 	vector<double> *T;
 	vector<double> *p;
 	vector<double> *rho;
+	vector<double> *macno;  // Mac number
+
+	double k;               // c_p /c_v = const
+	double cv;              // C_v  [kJ/kg.K]
+	double cp;              // C_ p [kJ/kg.K]
 
 public:
 
@@ -31,8 +32,11 @@ public:
 
 	void   setField(string field, double begincoord, double endcoord, double value);
 	int    checkFields();
-	void   printVTK(double timestep);
+	void   initiateThermoPhysicalProperties(double cpinput, double cvinput);	
+	void   updateThermoPhysicalProperties();
 
+
+	void   printVTK(double timestep);
 	/*
 	void   setBoundaries(double speedtop, double speedbottom);
 	void   setPhisicalProperties(double viscosityinput);
