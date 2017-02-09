@@ -15,21 +15,19 @@ int main()
 {
   
     Mesh mesh(-7.0,7.0,141); //141
-
+    
     mesh.setField("velocity"   ,-7 , 7,     0);
     mesh.setField("pressure"   ,-7 , 0,988000);
     mesh.setField("pressure"   , 0 , 7, 99300);
     mesh.setField("temperature",-7 , 0,  2438);
     mesh.setField("temperature", 0 , 7,  2452);
 
-    mesh.initiateThermoPhysicalProperties(1.005,0.718);
+    mesh.initiateThermoPhysicalProperties(1005,718);
 
     if( mesh.checkFields() == -1){ cout << "\nProgram Terminated! \n"; return 0; }
 
-    
-
     mesh.printVTK(0);
-
+    
     return 0;
 }
 

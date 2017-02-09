@@ -7,17 +7,23 @@ Mesh::Mesh(double meshbegin, double meshend, int numberofmeshpoints)
 	firstcoordinate = meshbegin; 
 	delta           = totalsize/(numberofpoints - 1);
 		
-	points  = new vector<double>(numberofmeshpoints,-123456789); 
-  	U       = new vector<double>(numberofmeshpoints,-123456789); 
-	E       = new vector<double>(numberofmeshpoints,-123456789); 
-	T       = new vector<double>(numberofmeshpoints,-123456789);
-	p       = new vector<double>(numberofmeshpoints,-123456789); 
-	rho     = new vector<double>(numberofmeshpoints,-123456789);
-	macno   = new vector<double>(numberofmeshpoints,-123456789);
+	points  = new double[numberofmeshpoints]; //,-123456789); 
+  	U       = new double[numberofmeshpoints]; //,-123456789); 
+	E       = new double[numberofmeshpoints]; //,-123456789); 
+	T       = new double[numberofmeshpoints]; //,-123456789);
+	p       = new double[numberofmeshpoints]; //,-123456789); 
+	rho     = new double[numberofmeshpoints]; //,-123456789);
+	macno   = new double[numberofmeshpoints]; //,-123456789);
 	
 	for( int i = 0; i < numberofpoints; i++)
 	{
-		(*points)[i] = meshbegin + delta * i;
+		points[i]  = meshbegin + delta * i;
+		U[i]       = -1; 
+		E[i]       = -1; 
+		T[i]       = -1; 
+		p[i]       = -1;  
+		rho[i]     = -1; 
+		macno[i]   = -1; 
 	}
 }
 
@@ -25,11 +31,11 @@ void Mesh::setField(string field, double begincoord, double endcoord, double val
 {
 	// Fills a field with a "value" from "begincoord" to "endcoord"
 	
-	vector<double> *vectortofill;
+	double *arraytofill;
 
-	     if(field == "velocity"     ){ vectortofill = U; }
-	else if(field == "temperature"  ){ vectortofill = T; }
-	else if(field == "pressure"     ){ vectortofill = p; }
+	     if(field == "velocity"     ){ arraytofill = U; }
+	else if(field == "temperature"  ){ arraytofill = T; }
+	else if(field == "pressure"     ){ arraytofill = p; }
 	else
 	{
 		cout << "An error as occured creating a field. Field " << field << " does not exist!\n";
@@ -44,9 +50,9 @@ void Mesh::setField(string field, double begincoord, double endcoord, double val
 
 	for( int i = 0; i < numberofpoints; i++)
 	{
-		if ( (*points)[i] >= begincoord && (*points)[i] <= endcoord )
+		if ( points[i] >= begincoord && points[i] <= endcoord )
 		{
-			(*vectortofill)[i] = value;	
+			arraytofill[i] = value;	
 		}	
 	}
 }
@@ -62,19 +68,19 @@ int Mesh::checkFields()
 
 	for( int i = 0; i < numberofpoints; i++)
 	{
-		if ( (*U)[i] == -123456789 )
+		if ( U[i] == -1 )
 		{
-			cout << "    Velocity    is undefined for point" << std::setw(4) << i <<", coordinate" << std::setw(4) << (*points)[i] << "!\n";
+			cout << "    Velocity    is undefined for point" << std::setw(4) << i <<", coordinate" << std::setw(4) << points[i] << "!\n";
 			error = true;
 		}
-		if ( (*T)[i] == -123456789 )
+		if ( T[i] == -1 )
 		{
-			cout << "    Temperature is undefined for point"<< std::setw(4) << i <<", coordinate" << std::setw(4) << (*points)[i] << "!\n";
+			cout << "    Temperature is undefined for point"<< std::setw(4) << i <<", coordinate" << std::setw(4) << points[i] << "!\n";
 			error = true;
 		}
-		if ( (*p)[i] == -123456789 )
+		if ( p[i] == -1 )
 		{
-			cout << "    Pressure    is undefined for point"<< std::setw(4) << i <<", coordinate" << std::setw(4) << (*points)[i] << "!\n";
+			cout << "    Pressure    is undefined for point"<< std::setw(4) << i <<", coordinate" << std::setw(4) << points[i] << "!\n";
 			error = true;
 		}		
 	}
@@ -93,7 +99,7 @@ int Mesh::checkFields()
 void Mesh::initiateThermoPhysicalProperties(double cpinput, double cvinput)
 {
 	// assuming T,p and U are defined, updates rho, E and Mac speed.
-	// Sets constanc k,cp and cv
+	// Sets constant k,cp and cv
 
 	cv = cvinput;
 	cp = cpinput;
@@ -101,9 +107,9 @@ void Mesh::initiateThermoPhysicalProperties(double cpinput, double cvinput)
 
 	for (int i = 0; i<numberofpoints; i++)
 	{
-		(*E)[i]     = cv * (*T)[i] + (1/2) * pow((*U)[i],2);
-		(*rho)[i]   = (*p)[i] / (k * cv * (*T)[i]);
-		(*macno)[i] = sqrt( k * (*p)[i] / (*rho)[i]);
+		E[i]     = cv * T[i] + (1/2) * pow(U[i],2);
+		rho[i]   = p[i] / (k * cv * T[i]);
+		macno[i] = sqrt( k * p[i] / rho[i]);
 	}	
 }
 
@@ -120,9 +126,9 @@ void Mesh::printVTK(double timestep)
 
 	ofstream myfile ("results.vtk");
 
-	vector<double>* vectorstoprint [6] = { E,U,T,p,rho,macno }; 
-	string          vectornames    [6] = { "energy","Velocity", "Temperature", "Pressure","rho","macno" };
-	int             nofvectorstoprint  = 6;
+	double *vectorstoprint [6] = { E,U,T,p,rho,macno }; 
+	string  vectornames    [6] = { "energy","Velocity", "Temperature", "Pressure","rho","macno" };
+	int     nofvectorstoprint  = 6;
 
 	if (myfile.is_open())
 	{
@@ -135,8 +141,8 @@ void Mesh::printVTK(double timestep)
 
 		for (int i = 0; i<numberofpoints; i++)
 		{
-			myfile << (*points)[i] << "   0 0\n"
-				   << (*points)[i] << " 0.2 0\n";
+			myfile << points[i] << "   0 0\n"
+				   << points[i] << " 0.2 0\n";
 		}
 
 		myfile << "\n\nCELLS " << numberofpoints -1 <<" " << 5*(numberofpoints -1) << "\n";		
@@ -163,8 +169,8 @@ void Mesh::printVTK(double timestep)
 
 			for (int i = 0; i<numberofpoints; i++)
 			{
-				myfile << (*vectorstoprint[j])[i] << "\n";
-				myfile << (*vectorstoprint[j])[i] << "\n";
+				myfile << vectorstoprint[j][i] << "\n";
+				myfile << vectorstoprint[j][i] << "\n";
 			}	
 
 			myfile << "\n\n";   

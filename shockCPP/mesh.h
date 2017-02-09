@@ -9,22 +9,25 @@ using namespace std;
 
 class Mesh {
 
-	double              totalsize;
-	double              firstcoordinate;
-	double				delta;
-	int                 numberofpoints;
+	// Properties of the mesh
+	double totalsize;
+	double firstcoordinate;
+	double delta;
+	int    numberofpoints;
 
-	vector<double> *points;
-	vector<double> *U;
-	vector<double> *E;
-	vector<double> *T;
-	vector<double> *p;
-	vector<double> *rho;
-	vector<double> *macno;  // Mac number
+	// Pointers to the arrays containing the system variables
+	double *points; // Points of the mesh
+	double *U;      // Velocity
+	double *E;      // Energy
+	double *T;      // Temperature
+	double *p;      // Pressure
+	double *rho;    // Density
+	double *macno;  // Mac number
 
-	double k;               // c_p /c_v = const
-	double cv;              // C_v  [kJ/kg.K]
-	double cp;              // C_ p [kJ/kg.K]
+	// Static global properties of the fluid
+	double k;       // c_p /c_v = const
+	double cv;      // C_v  [J/kg.K]
+	double cp;      // C_ p [J/kg.K]
 
 public:
 
@@ -34,9 +37,10 @@ public:
 	int    checkFields();
 	void   initiateThermoPhysicalProperties(double cpinput, double cvinput);	
 	void   updateThermoPhysicalProperties();
-
+	
 
 	void   printVTK(double timestep);
+	
 	/*
 	void   setBoundaries(double speedtop, double speedbottom);
 	void   setPhisicalProperties(double viscosityinput);
