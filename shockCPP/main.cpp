@@ -8,8 +8,8 @@
 */
 
 #include <iostream>
-#include "mesh.h"
-
+//#include "mesh.h"
+#include "solver.h"
 
 int main()
 {
@@ -26,8 +26,25 @@ int main()
 
     if( mesh.checkFields() == -1){ cout << "\nProgram Terminated! \n"; return 0; }
 
-    mesh.printVTK(0);
+    Solver EQNmass(     mesh, &Mesh::getRho,  &Mesh::getRhoFlux  );
+    Solver EQNmomentum( mesh, &Mesh::getRhoU, &Mesh::getRhoUFlux );
+    Solver EQNenergy(   mesh, &Mesh::getRhoE, &Mesh::getRhoEFlux );
+
+    double time = 0;
+    double timestep = 0.001;
+
+    while(time < 0.3) // main time loop;
+    {
+        EQNmass.advanceTime(timestep);
+        EQNmomentum.advanceTime(timestep);
+        EQNenergy.advanceTime(timestep);
+
+        mesh.printVTK(time);
+
+        time += timestep; 
+    }
     
+    cout << "\nProgram Terminated! \n"; return 0;
     return 0;
 }
 
