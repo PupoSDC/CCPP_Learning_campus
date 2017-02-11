@@ -1,4 +1,3 @@
-#include <vector>
 #include <cmath>
 #include <string>
 #include <iostream>
@@ -16,18 +15,23 @@ class Mesh {
 	int    numberofpoints;
 
 	// Pointers to the arrays containing the system variables
-	double *points; // Points of the mesh
-	double *U;      // Velocity
-	double *E;      // Energy
-	double *T;      // Temperature
-	double *p;      // Pressure
-	double *rho;    // Density
-	double *macno;  // Mac number
+	double *points;   // Points of the mesh
+	double *U;        // Velocity
+	double *E;        // Energy
+	double *T;        // Temperature
+	double *p;        // Pressure
+	double *macno;    // Mac number
+
+	double *rho;      // Density
+	double *rhoU      // Momentum
+	double *rhoE      // Energy momentum?
+	double *rhoUflux  // rhoU^2 + P
+	double *rhoEflux  // rhoU(E+ p/rho)
 
 	// Static global properties of the fluid
-	double k;       // c_p /c_v = const
-	double cv;      // C_v  [J/kg.K]
-	double cp;      // C_ p [J/kg.K]
+	double k;         // c_p /c_v = const
+	double cv;        // C_v  [J/kg.K]
+	double cp;        // C_p [J/kg.K]
 
 public:
 
@@ -37,10 +41,10 @@ public:
 	int    checkFields();
 	void   initiateThermoPhysicalProperties(double cpinput, double cvinput);	
 	void   updateThermoPhysicalProperties();
-	
 
 	void   printVTK(double timestep);
 	
+
 	/*
 	void   setBoundaries(double speedtop, double speedbottom);
 	void   setPhisicalProperties(double viscosityinput);

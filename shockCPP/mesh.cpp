@@ -115,7 +115,22 @@ void Mesh::initiateThermoPhysicalProperties(double cpinput, double cvinput)
 
 void Mesh::updateThermoPhysicalProperties()
 {
+	for (int i = 0; i<numberofpoints; i++)
+	{
+		T[i]     = ( E[i] - (1/2) * pow(U[i],2) )/ cv;
+		macno[i] = sqrt( k * p[i] / rho[i]);
+	}	
+}
 
+void Mesh::updateFields()
+{
+	for (int i = 0; i<numberofpoints; i++)
+	{
+		//rho[i]  = // rho remains the same from the iterative procedure    
+		rhoU[i]   =    
+		rhoE[i]   =    
+		rhoUUP[i] =  
+	}	
 }
 
 void Mesh::printVTK(double timestep)
