@@ -24,6 +24,13 @@ class Solver {
     double *vectorB;    
 
     void simpleUpwindScheme();
+    void simpleCentralScheme();
+
+
+    Mesh *mesh;
+
+    void( Mesh::*getFieldValuesAndCopyTo)( double* );
+    void( Mesh::*getFluxValuesAndCopyTo)(  double* );
 
 public:
 
@@ -31,7 +38,8 @@ public:
 
     void advanceTime(double deltaT);
 
-    void updatefield();  
+    double* updatedField();  
 
+    double maxCourant();
 
 };

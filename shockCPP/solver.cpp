@@ -1,42 +1,38 @@
 #include "solver.h"
 
-Solver::Solver( Mesh &mesh, void( Mesh::*getFieldValuesAndCopyTo)( double* ), void( Mesh::*getFluxValuesAndCopyTo )( double* ) ){
+Solver::Solver( Mesh &meshobject, void( Mesh::*getField)( double* ), void( Mesh::*getFlux)( double* ) ){
 
-    numberofpoints = mesh.getNumberofPoints();
+	mesh = &meshobject;
+
+    numberofpoints = mesh->getNumberofPoints();
 
     U       = new double[numberofpoints];
     Uflux   = new double[numberofpoints];
     Uplus   = new double[numberofpoints]; 
 
-    //matrixA = new double*[numberofpoints];
-    //for(int i=0; i<numberofpoints; i++)
-    //{
-    //	matrixA[i] = new double[numberofpoints];
-    //}
+    deltaX  = mesh->getDelta();
 
-    //vectorB = new double[numberofpoints];
+    getFieldValuesAndCopyTo = getField;
+    getFluxValuesAndCopyTo  = getFlux;
 
-    deltaX  = mesh.getDelta();
-
-    (mesh.*getFieldValuesAndCopyTo)(U); 
-    (mesh.*getFluxValuesAndCopyTo )(Uflux);
+    (mesh->*getFieldValuesAndCopyTo)(U); 
+    (mesh->*getFluxValuesAndCopyTo )(Uflux);
 };
 
 void Solver::advanceTime(double deltaTinput){
+	
 	deltaT = deltaTinput;
 
-	for(int i=1; i<numberofpoints-1; i++)
-    {
-    	U[i] = Uplus[i];
+	(mesh->*getFieldValuesAndCopyTo)(U); 
+    (mesh->*getFluxValuesAndCopyTo )(Uflux);
 
-    }
-
-	simpleUpwindScheme();
+	//simpleUpwindScheme();
+	simpleCentralScheme();
 }
 
 void Solver::simpleUpwindScheme(){
 
-	for(int i=1; i<numberofpoints-1; i++)
+	for(int i=0; i<numberofpoints; i++)
     {	
 		Uplus[i] = U[i];
 
@@ -49,5 +45,29 @@ void Solver::simpleUpwindScheme(){
 			Uplus[i] += (deltaX / deltaT) * ( Uflux[i+1] - Uflux[i] );
 		}
  	
+    }
+}
+
+void Solver::simpleCentralScheme(){
+
+	for(int i=1; i<numberofpoints-1; i++)
+    {	
+		Uplus[i] = U[i] - (deltaT / deltaX)*(Uflux[i+1] + Uflux[i-1])/2;  	
+    }
+}
+
+
+
+double* Solver::updatedField(){ return Uplus; }
+
+double Solver::maxCourant(){
+	double Co_max = 0;
+
+	for(int i=1; i<numberofpoints-1; i++)
+    {
+    	if ( abs(U[i])*deltaT/deltaX > Co_max )
+    	{
+    		Co_max = abs(U[i])*deltaT/deltaX; 
+    	}
     }
 }

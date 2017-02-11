@@ -114,7 +114,17 @@ void Mesh::updateThermoPhysicalProperties(){
     {
         T[i]     = ( E[i] - (1/2) * pow(U[i],2) )/ cv;
         macno[i] = sqrt( k * p[i] / rho[i]);
+        p[i]     = ( k - 1 ) * rho[i] * ( E[i] - (1/2)*pow(U[i],2) );
     }   
+}
+
+void Mesh::updateBoundaryConditions(){
+    U[0]                = 0.0;
+    U[numberofpoints]   = 0.0;
+    rho[0]              = rho[1];
+    rho[numberofpoints] = rho[numberofpoints-1];
+    E[0]                = E[1];
+    E[numberofpoints]   = E[numberofpoints-1];  
 }
 
 void Mesh::getRho(double* destination){
@@ -165,6 +175,27 @@ void Mesh::getRhoEFlux(double* destination){
     }  
 }
 
+void Mesh::updateRho(double* origin){
+    for (int i = 1; i<numberofpoints-1; i++)
+    {
+        rho[i] = origin[i];
+    }
+}
+
+void Mesh::updateU(double* origin){
+    for (int i = 1; i<numberofpoints-1; i++)
+    {
+        U[i] = origin[i]/rho[i];
+    }
+}
+
+void Mesh::updateE(double* origin){
+    for (int i = 1; i<numberofpoints-1; i++)
+    {
+        E[i] = origin[i]/rho[i];
+    }
+}
+
 int    Mesh::getNumberofPoints(){ return numberofpoints; }
 double Mesh::getDelta(){          return delta;          }
 
@@ -173,7 +204,10 @@ void Mesh::printVTK(double timestep){
     // using vtk file format
     // TODO: Implement timestep
 
-    ofstream myfile ("results.vtk");
+    string filename;
+
+    filename = "results_" + to_string(timestep) + ".vtk";
+    ofstream myfile (filename);
 
     double *vectorstoprint [6] = { E,U,T,p,rho,macno }; 
     string  vectornames    [6] = { "energy","Velocity", "Temperature", "Pressure","rho","macno" };

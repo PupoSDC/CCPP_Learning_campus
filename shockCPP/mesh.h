@@ -39,7 +39,8 @@ public:
     int    checkFields();
     void   initiateThermoPhysicalProperties(double cpinput, double cvinput);    
     void   updateThermoPhysicalProperties();
-
+    void   updateBoundaryConditions();
+    
     // Access to variables
 
     void   getRho(      double* destination );

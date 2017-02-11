@@ -14,7 +14,7 @@
 int main()
 {
   
-    Mesh mesh(-7.0,7.0,141); //141
+    Mesh mesh(-7.0,7.0,5); //141
     
     mesh.setField("velocity"   ,-7 , 7,     0);
     mesh.setField("pressure"   ,-7 , 0,988000);
@@ -26,24 +26,37 @@ int main()
 
     if( mesh.checkFields() == -1){ cout << "\nProgram Terminated! \n"; return 0; }
 
-    Solver EQNmass(     mesh, &Mesh::getRho,  &Mesh::getRhoFlux  );
-    Solver EQNmomentum( mesh, &Mesh::getRhoU, &Mesh::getRhoUFlux );
-    Solver EQNenergy(   mesh, &Mesh::getRhoE, &Mesh::getRhoEFlux );
+    Solver EQN_r(     mesh, &Mesh::getRho,  &Mesh::getRhoFlux  );
+    Solver EQN_U( mesh, &Mesh::getRhoU, &Mesh::getRhoUFlux );
+    Solver EQN_E(   mesh, &Mesh::getRhoE, &Mesh::getRhoEFlux );
 
-    double time = 0;
-    double timestep = 0.001;
+    double starttime = 0;
+    double timestep  = 0.00001;
+    double endtime   = 0.00004;
+    int    nprints;
+    int    maxprints = 10;
 
-    while(time < 0.3) // main time loop;
+    mesh.printVTK(0);
+
+    for (double time = starttime+timestep; time <= endtime; time +=timestep ) // main time loop;
     {
-        EQNmass.advanceTime(timestep);
-        EQNmomentum.advanceTime(timestep);
-        EQNenergy.advanceTime(timestep);
+        cout << "current time: " << time <<"\n";
 
-        mesh.printVTK(time);
+        EQN_r.advanceTime(timestep);
+        EQN_U.advanceTime(timestep);
+        EQN_E.advanceTime(timestep);
 
-        time += timestep; 
+        mesh.updateRho(EQN_r.updatedField());
+        mesh.updateU(  EQN_U.updatedField());
+        mesh.updateE(  EQN_E.updatedField());
+
+        mesh.updateBoundaryConditions();
+        mesh.updateThermoPhysicalProperties();
+
+        mesh.printVTK(time);   
     }
     
+
     cout << "\nProgram Terminated! \n"; return 0;
     return 0;
 }
