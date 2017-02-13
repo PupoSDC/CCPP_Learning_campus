@@ -4,13 +4,13 @@
     Unsteady state solver, converges at a residual rate of 0.01. Gauss-sidel linear
     solver was implemented, as well as residual convergence
    
-    compile: g++ *.cpp  -o Couette.run
+    compile:  g++ *.cpp -std=c++11 -o shock.run
 */
 
 #include <iostream>
-//#include "mesh.h"
+#include "mesh.h"
 #include "solver.h"
-
+    
 int main()
 {
   
@@ -22,39 +22,32 @@ int main()
     mesh.setField("temperature",-7 , 0,  2438);
     mesh.setField("temperature", 0 , 7,  2452);
 
-    mesh.initiateThermoPhysicalProperties(1005,718);
+    mesh.initiateVariables(1005,718);
 
     if( mesh.checkFields() == -1){ cout << "\nProgram Terminated! \n"; return 0; }
 
-    Solver EQN_r(     mesh, &Mesh::getRho,  &Mesh::getRhoFlux  );
-    Solver EQN_U( mesh, &Mesh::getRhoU, &Mesh::getRhoUFlux );
-    Solver EQN_E(   mesh, &Mesh::getRhoE, &Mesh::getRhoEFlux );
+    Solver EQN_r( mesh.getRho(),  mesh.getRhoFlux(),  mesh.getNumberofPoints() );
+    Solver EQN_U( mesh.getRhoU(), mesh.getRhoUFlux(), mesh.getNumberofPoints() );
+    Solver EQN_E( mesh.getRhoE(), mesh.getRhoEFlux(), mesh.getNumberofPoints() );
 
     double starttime = 0;
     double timestep  = 0.00001;
-    double endtime   = 0.00004;
-    int    nprints;
-    int    maxprints = 10;
+    double endtime   = 0.00001;
 
     mesh.printVTK(0);
 
+    /*
     for (double time = starttime+timestep; time <= endtime; time +=timestep ) // main time loop;
     {
         cout << "current time: " << time <<"\n";
+        
+        EQN_r.advanceTime(timestep); 
+        EQN_U.advanceTime(timestep); 
+        EQN_E.advanceTime(timestep); 
 
-        EQN_r.advanceTime(timestep);
-        EQN_U.advanceTime(timestep);
-        EQN_E.advanceTime(timestep);
-
-        mesh.updateRho(EQN_r.updatedField());
-        mesh.updateU(  EQN_U.updatedField());
-        mesh.updateE(  EQN_E.updatedField());
-
-        mesh.updateBoundaryConditions();
-        mesh.updateThermoPhysicalProperties();
-
+        mesh.updateVariables();
         mesh.printVTK(time);   
-    }
+    }*/
     
 
     cout << "\nProgram Terminated! \n"; return 0;

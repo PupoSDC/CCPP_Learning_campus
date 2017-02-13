@@ -22,6 +22,11 @@ class Mesh {
     double *rho;      // Density
 
     // System explicitely calculated variables
+    double *rhoU;     // Momentum
+    double *rhoE;     // Energy momentum
+    double *rhoFlux;  // Flux for density equation
+    double *rhoUFlux; // Flux for momentum equation  
+    double *rhoEFlux; // Flux for energy equation
     double *p;        // Pressure
     double *T;        // Temperature    
     double *macno;    // Mac number
@@ -35,24 +40,27 @@ public:
 
     Mesh(double meshbegin, double meshend, int numberofmeshpoints);
 
-    void   setField(string field, double begincoord, double endcoord, double value);
     int    checkFields();
-    void   initiateThermoPhysicalProperties(double cpinput, double cvinput);    
-    void   updateThermoPhysicalProperties();
+
+    void   setField(string field, double begincoord, double endcoord, double value);   
+    void   initiateVariables(double cpinput, double cvinput);    
+    void   updateVariables();
+    void   updateFluxes();
     void   updateBoundaryConditions();
     
     // Access to variables
+    double*  getRho();
+    double*  getRhoU(); 
+    double*  getRhoE();
 
-    void   getRho(      double* destination );
-    void   getRhoU(     double* destination ); 
-    void   getRhoE(     double* destination );
-    void   getRhoFlux(  double* destination );
-    void   getRhoUFlux( double* destination );
-    void   getRhoEFlux( double* destination );
+    double*  getRhoFlux();
+    double*  getRhoUFlux(); 
+    double*  getRhoEFlux();
 
-    void   updateRho(   double* origin );
-    void   updateU(     double* origin ); 
-    void   updateE(     double* origin );
+    // return constants
+    double getk();      
+    double getcv();     
+    double getcp();    
 
     int    getNumberofPoints();
     double getDelta();

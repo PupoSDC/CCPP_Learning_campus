@@ -6,24 +6,57 @@ Mesh::Mesh(double meshbegin, double meshend, int numberofmeshpoints){
     firstcoordinate = meshbegin; 
     delta           = totalsize/(numberofpoints - 1);
         
-    points  = new double[numberofmeshpoints]; //,-123456789); 
-    U       = new double[numberofmeshpoints]; //,-123456789); 
-    E       = new double[numberofmeshpoints]; //,-123456789); 
-    rho     = new double[numberofmeshpoints]; //,-123456789);
-    p       = new double[numberofmeshpoints]; //,-123456789); 
-    T       = new double[numberofmeshpoints]; //,-123456789);
-    macno   = new double[numberofmeshpoints]; //,-123456789);
+    points    = new double[numberofmeshpoints]; 
+    U         = new double[numberofmeshpoints]; 
+    E         = new double[numberofmeshpoints]; 
+    rho       = new double[numberofmeshpoints];
+    rhoU      = new double[numberofmeshpoints];
+    rhoE      = new double[numberofmeshpoints];
+    rhoFlux   = new double[numberofmeshpoints]; 
+    rhoUFlux  = new double[numberofmeshpoints]; 
+    rhoEFlux  = new double[numberofmeshpoints];
+    p         = new double[numberofmeshpoints]; 
+    T         = new double[numberofmeshpoints];
+    macno     = new double[numberofmeshpoints];
     
     for( int i = 0; i < numberofpoints; i++)
     {
         points[i]  = meshbegin + delta * i;
         U[i]       = -1; 
-        E[i]       = -1; 
-        rho[i]     = -1; 
         p[i]       = -1;
-        T[i]       = -1;   
-        macno[i]   = -1; 
+        T[i]       = -1;    
     }
+}
+
+int Mesh::checkFields(){
+    // Checks if all fields have been filled; Returns -1 in case of error.
+
+    bool error = false;
+
+    cout << "\nChecking initial field\n";
+    cout.precision(3);
+
+    for( int i = 0; i < numberofpoints; i++)
+    {
+        if ( U[i] == -1 )
+        {
+            cout << "    Velocity    is undefined for point" << std::setw(4) << i <<", coordinate" << std::setw(4) << points[i] << "!\n";
+            error = true;
+        }
+        if ( T[i] == -1 )
+        {
+            cout << "    Temperature is undefined for point"<< std::setw(4) << i <<", coordinate" << std::setw(4) << points[i] << "!\n";
+            error = true;
+        }
+        if ( p[i] == -1 )
+        {
+            cout << "    Pressure    is undefined for point"<< std::setw(4) << i <<", coordinate" << std::setw(4) << points[i] << "!\n";
+            error = true;
+        }       
+    }
+
+    if(error){ return -1; } 
+    else     { cout << "OK! \n"; return  0; }
 }
 
 void Mesh::setField(string field, double begincoord, double endcoord, double value){
@@ -55,46 +88,8 @@ void Mesh::setField(string field, double begincoord, double endcoord, double val
     }
 }
 
-int Mesh::checkFields(){
-    // Checks if all fields have been filled; Returns -1 in case of error.
-
-    bool error = false;
-
-    cout << "\nChecking initial field\n";
-    cout.precision(3);
-
-    for( int i = 0; i < numberofpoints; i++)
-    {
-        if ( U[i] == -1 )
-        {
-            cout << "    Velocity    is undefined for point" << std::setw(4) << i <<", coordinate" << std::setw(4) << points[i] << "!\n";
-            error = true;
-        }
-        if ( T[i] == -1 )
-        {
-            cout << "    Temperature is undefined for point"<< std::setw(4) << i <<", coordinate" << std::setw(4) << points[i] << "!\n";
-            error = true;
-        }
-        if ( p[i] == -1 )
-        {
-            cout << "    Pressure    is undefined for point"<< std::setw(4) << i <<", coordinate" << std::setw(4) << points[i] << "!\n";
-            error = true;
-        }       
-    }
-
-    if(error)
-    {
-        return -1; 
-    } 
-    else     
-    { 
-        cout << "OK! \n";
-        return  0; 
-    }
-}
-
-void Mesh::initiateThermoPhysicalProperties(double cpinput, double cvinput){
-    // assuming T,p and U are defined, updates rho, E and Mac speed.
+void Mesh::initiateVariables(double cpinput, double cvinput){
+    // assuming T,p and U are defined, updates rho, E, Mac speed and transport quantaties.
     // Sets constant k,cp and cv
 
     cv = cvinput;
@@ -106,15 +101,57 @@ void Mesh::initiateThermoPhysicalProperties(double cpinput, double cvinput){
         E[i]     = cv * T[i] + (1/2) * pow(U[i],2);
         rho[i]   = p[i] / (k * cv * T[i]);
         macno[i] = sqrt( k * p[i] / rho[i]);
+        rhoU[i]  = rho[i] * U[i];
+        rhoE[i]  = rho[i] * E[i];
     }   
+
+    updateFluxes();
 }
 
-void Mesh::updateThermoPhysicalProperties(){
+void Mesh::updateVariables(){
     for (int i = 0; i<numberofpoints; i++)
     {
+        U[i]     = rhoU[i]/rho[i];
+        E[i]     = rhoE[i]/rho[i];
         T[i]     = ( E[i] - (1/2) * pow(U[i],2) )/ cv;
+    }  
+
+    updateBoundaryConditions();
+    
+    for (int i = 0; i<numberofpoints; i++)
+    {
         macno[i] = sqrt( k * p[i] / rho[i]);
         p[i]     = ( k - 1 ) * rho[i] * ( E[i] - (1/2)*pow(U[i],2) );
+    }  
+
+    updateFluxes(); 
+}
+
+void Mesh::updateFluxes(){
+
+    rhoFlux[0]               = 0;
+    rhoFlux[numberofpoints]  = 0;
+    rhoUFlux[0]              = 0;
+    rhoUFlux[numberofpoints] = 0;
+    rhoEFlux[0]              = 0;
+    rhoEFlux[numberofpoints] = 0;
+
+    for (int i = 1; i<numberofpoints-1; i++)
+    {
+        rhoFlux[i]   = ( 1/4)*rho[i]  *macno[i]  *pow( (1 + U[i]  /macno[i]  ), 2 ) * 1 / delta  
+                     + (-1/4)*rho[i+1]*macno[i+1]*pow( (1 - U[i+1]/macno[i+1]), 2 ) * 1 / delta   
+                     - ( 1/4)*rho[i-1]*macno[i-1]*pow( (1 + U[i-1]/macno[i-1]), 2 ) * 1 / delta  
+                     - (-1/4)*rho[i]  *macno[i]  *pow( (1 - U[i]  /macno[i]  ), 2 ) * 1 / delta;  
+
+        rhoUFlux[i]  = ( 1/4)*rho[i]  *macno[i]  *pow( (1 + U[i]  /macno[i]  ), 2 ) * (2*macno[i]/k)*  ( (k-1)/2 * U[i]   / macno[i]   + 1 ) / delta;
+                     + (-1/4)*rho[i+1]*macno[i+1]*pow( (1 - U[i+1]/macno[i+1]), 2 ) * (2*macno[i+1]/k)*( (k-1)/2 * U[i+1] / macno[i+1] - 1 ) / delta;
+                     - ( 1/4)*rho[i-1]*macno[i-1]*pow( (1 + U[i-1]/macno[i-1]), 2 ) * (2*macno[i-1]/k)*( (k-1)/2 * U[i-1] / macno[i-1] + 1 ) / delta;
+                     - (-1/4)*rho[i]  *macno[i]  *pow( (1 - U[i]  /macno[i]  ), 2 ) * (2*macno[i]/k)*  ( (k-1)/2 * U[i]   / macno[i]   - 1 ) / delta;
+
+        rhoEFlux[i]  = ( 1/4)*rho[i]  *macno[i]  *pow( (1 + U[i]  /macno[i]  ), 2 ) * (2*pow(macno[i  ],2)/(pow(k,2)-1)) * pow( ((k-1)/2 * U[i]   / macno[i]   + 1 ),2) / delta;
+                     + (-1/4)*rho[i+1]*macno[i+1]*pow( (1 - U[i+1]/macno[i+1]), 2 ) * (2*pow(macno[i+1],2)/(pow(k,2)-1)) * pow( ((k-1)/2 * U[i+1] / macno[i+1] - 1 ),2) / delta;
+                     - ( 1/4)*rho[i-1]*macno[i-1]*pow( (1 + U[i-1]/macno[i-1]), 2 ) * (2*pow(macno[i-1],2)/(pow(k,2)-1)) * pow( ((k-1)/2 * U[i-1] / macno[i-1] + 1 ),2) / delta;
+                     - (-1/4)*rho[i]  *macno[i]  *pow( (1 - U[i]  /macno[i]  ), 2 ) * (2*pow(macno[i  ],2)/(pow(k,2)-1)) * pow( ((k-1)/2 * U[i]   / macno[i]   - 1 ),2) / delta;       
     }   
 }
 
@@ -127,77 +164,17 @@ void Mesh::updateBoundaryConditions(){
     E[numberofpoints]   = E[numberofpoints-1];  
 }
 
-void Mesh::getRho(double* destination){
-    // Copys rho to a destination
-    for (int i = 0; i<numberofpoints; i++)
-    {
-        destination[i] = rho[i];
-    }  
-}
-
-void Mesh::getRhoU(double* destination){
-    // Copys rho*U to a destination
-    for (int i = 0; i<numberofpoints; i++)
-    {
-        destination[i] = rho[i]*U[i];
-    }  
-}
-
-void Mesh::getRhoE(double* destination){
-    // Copys rho*E to a destination
-    for (int i = 0; i<numberofpoints; i++)
-    {
-        destination[i] = rho[i]*E[i];
-    }  
-}
-
-void Mesh::getRhoFlux(double* destination){
-    // Copys rho to a destination
-    for (int i = 0; i<numberofpoints; i++)
-    {
-        destination[i] = rho[i]*U[i];
-    }  
-}
-
-void Mesh::getRhoUFlux(double* destination){
-    // Copys rho to a destination
-    for (int i = 0; i<numberofpoints; i++)
-    {
-        destination[i] = rho[i]*pow(U[i],2) + p[i];
-    }  
-}
-
-void Mesh::getRhoEFlux(double* destination){
-    // Copys rho to a destination
-    for (int i = 0; i<numberofpoints; i++)
-    {
-        destination[i] = rho[i]*U[i]*( E[i] + p[i]/rho[i] );
-    }  
-}
-
-void Mesh::updateRho(double* origin){
-    for (int i = 1; i<numberofpoints-1; i++)
-    {
-        rho[i] = origin[i];
-    }
-}
-
-void Mesh::updateU(double* origin){
-    for (int i = 1; i<numberofpoints-1; i++)
-    {
-        U[i] = origin[i]/rho[i];
-    }
-}
-
-void Mesh::updateE(double* origin){
-    for (int i = 1; i<numberofpoints-1; i++)
-    {
-        E[i] = origin[i]/rho[i];
-    }
-}
-
-int    Mesh::getNumberofPoints(){ return numberofpoints; }
-double Mesh::getDelta(){          return delta;          }
+double* Mesh::getRho(){            return rho;            }
+double* Mesh::getRhoU(){           return rhoU;           } 
+double* Mesh::getRhoE(){           return rhoE;           } 
+double* Mesh::getRhoFlux(){        return rhoFlux;        }
+double* Mesh::getRhoUFlux(){       return rhoUFlux;       } 
+double* Mesh::getRhoEFlux(){       return rhoEFlux;       }
+double  Mesh::getk(){              return k;              }     
+double  Mesh::getcv(){             return cp;             }    
+double  Mesh::getcp(){             return cv;             }   
+int     Mesh::getNumberofPoints(){ return numberofpoints; }
+double  Mesh::getDelta(){          return delta;          }
 
 void Mesh::printVTK(double timestep){
     // Prints the current velocity, temperature and pressure to a file 
@@ -209,9 +186,9 @@ void Mesh::printVTK(double timestep){
     filename = "results_" + to_string(timestep) + ".vtk";
     ofstream myfile (filename);
 
-    double *vectorstoprint [6] = { E,U,T,p,rho,macno }; 
-    string  vectornames    [6] = { "energy","Velocity", "Temperature", "Pressure","rho","macno" };
-    int     nofvectorstoprint  = 6;
+    double *vectorstoprint [9] = { E,U,T,p,rho,macno,rhoFlux,rhoUFlux,rhoEFlux }; 
+    string  vectornames    [9] = { "energy","Velocity", "Temperature", "Pressure","rho","macno","rhoFlux","rhoUFlux","rhoEFlux" };
+    int     nofvectorstoprint  = 9;
 
     if (myfile.is_open())
     {

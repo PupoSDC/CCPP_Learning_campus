@@ -1,45 +1,19 @@
 #include <cmath>
-#include <string>
-#include <iostream>
-#include <iomanip>
-#include <fstream>
-#include "mesh.h"
 
 using namespace std;
 
 class Solver {
-
-    // matrix system
-    int numberofpoints;  // Dimension of the vectors (n) and matrix (n*n) of the system
+    int n;               // Dimension of the vectors (n) and matrix (n*n) of the system
 
     double *U;           // Vector U
-    double *Uflux;       // Flux from Vector U
-    double *Uplus;       // Vector U in the next iteration step
-    double *residual;     
+    double *Uflux;       // Flux from Vector U   
 
     double deltaT;       // timestep
     double deltaX;       // Mesh size
 
-    double **matrixA;
-    double *vectorB;    
-
-    void simpleUpwindScheme();
-    void simpleCentralScheme();
-
-
-    Mesh *mesh;
-
-    void( Mesh::*getFieldValuesAndCopyTo)( double* );
-    void( Mesh::*getFluxValuesAndCopyTo)(  double* );
-
 public:
 
-    Solver( Mesh &mesh, void( Mesh::*getFieldValuesAndCopyTo)( double* ), void( Mesh::*getFluxValuesAndCopyTo )( double* ) );
+    Solver(double *vectorU, double *vectorUflux, int numberofpoints);
 
     void advanceTime(double deltaT);
-
-    double* updatedField();  
-
-    double maxCourant();
-
 };
