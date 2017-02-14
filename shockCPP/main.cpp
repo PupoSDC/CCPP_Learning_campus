@@ -14,7 +14,7 @@
 int main()
 {
   
-    Mesh mesh(-7.0,7.0,5); //141
+    Mesh mesh(-7.0,7.0,141); //141
     
     mesh.setField("velocity"   ,-7 , 7,     0);
     mesh.setField("pressure"   ,-7 , 0,988000);
@@ -32,12 +32,13 @@ int main()
 
     double starttime = 0;
     double timestep  = 0.00001;
-    double endtime   = 0.00001;
+    double printstep = 0.00001;
+    double endtime   = 0.00800;
 
     mesh.printVTK(0);
 
-    /*
-    for (double time = starttime+timestep; time <= endtime; time +=timestep ) // main time loop;
+    // main time loop;
+    for (double time = starttime + timestep, printtime = starttime + printstep; time <= endtime; time +=timestep ) 
     {
         cout << "current time: " << time <<"\n";
         
@@ -46,10 +47,15 @@ int main()
         EQN_E.advanceTime(timestep); 
 
         mesh.updateVariables();
-        mesh.printVTK(time);   
-    }*/
-    
 
+        if( time >= printtime )
+        {
+           mesh.printVTK(time); 
+           printtime += printstep;
+        }
+        
+    }
+    
     cout << "\nProgram Terminated! \n"; return 0;
     return 0;
 }

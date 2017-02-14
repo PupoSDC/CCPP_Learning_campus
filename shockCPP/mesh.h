@@ -34,7 +34,8 @@ class Mesh {
     // Static global properties of the fluid
     double k;         // c_p /c_v = const
     double cv;        // C_v  [J/kg.K]
-    double cp;        // C_p [J/kg.K]
+    double cp;        // C_p  [J/kg.K]
+    double R;         // R_specific [J Kg^-1 K^-1]
 
 public:
 
@@ -57,7 +58,7 @@ public:
     double*  getRhoUFlux(); 
     double*  getRhoEFlux();
 
-    // return constants
+    // Access to constants
     double getk();      
     double getcv();     
     double getcp();    
