@@ -14,13 +14,21 @@
 int main()
 {
   
-    Mesh mesh(-7.0,7.0,141); //141
+    Mesh mesh(-0.5,0.5,1001); //141
     
-    mesh.setField("velocity"   ,-7 , 7,     0);
-    mesh.setField("pressure"   ,-7 , 0,988000);
-    mesh.setField("pressure"   , 0 , 7, 99300);
-    mesh.setField("temperature",-7 , 0,  2438);
-    mesh.setField("temperature", 0 , 7,  2452);
+    mesh.setField("velocity"   ,-0.5, 0.5,     0);
+    mesh.setField("temperature",-0.5, 0.5,   303);
+    mesh.setField("pressure"   ,-0.5, 0.0,500000);
+    mesh.setField("pressure"   , 0.0, 0.5, 20000);
+
+    //Mesh mesh(-7.0,7.0,1001); //141
+
+    //mesh.setField("velocity"   ,-7 , 7,     0);
+    //mesh.setField("pressure"   ,-7 , 0,988000);
+    //mesh.setField("pressure"   , 0 , 7, 99300);
+    //mesh.setField("temperature",-7 , 0,  2438);
+    //mesh.setField("temperature", 0 , 7,  2452);
+
 
     mesh.initiateVariables(1005,718);
 
@@ -31,9 +39,9 @@ int main()
     Solver EQN_E( mesh.getRhoE(), mesh.getRhoEFlux(), mesh.getNumberofPoints() );
 
     double starttime = 0;
-    double timestep  = 0.00001;
-    double printstep = 0.00001;
-    double endtime   = 0.00800;
+    double timestep  = 0.000001;
+    double printstep = 0.00010;
+    double endtime   = 0.00400;
 
     mesh.printVTK(0);
 
