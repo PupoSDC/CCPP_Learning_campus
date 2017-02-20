@@ -11,26 +11,27 @@ using namespace std;
 class Tree {
 
 	struct node { 
-	    node   *left;
-	    node   *right;
+	    node   *left  = NULL;
+	    node   *right = NULL;
 		double scalar;  // Example scalar
 	};
 
+	int                number_of_levels;
 	node               *root;
 	std::vector<node*> nodes;
-	
-	//node* searchfunction for printing
+	std::vector<node*> temp_nodes; //used for suport
 
 public:
 
 	Tree(size_t number_of_levels);
 
-	bool swap(size_t first_node, size_t second_node);
+	bool swap(size_t node_index);
 
 	void update(size_t node_id, double scalar);
 
+	void randomSwap();
+	
 	void printtree();
-
 
 };
 
