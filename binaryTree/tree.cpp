@@ -1,109 +1,122 @@
 #include "tree.h"
 
-Tree::Tree(size_t input_number_of_levels){
+Tree::Tree(size_t input_number_of_dimensions, size_t input_number_of_levels){
 
-	number_of_levels = input_number_of_levels;
+	number_of_levels     = input_number_of_levels;
+	number_of_dimensions = input_number_of_dimensions;
 
-	nodes.resize( pow(2,number_of_levels) - 1 );
-    temp_nodes.resize( pow(2,number_of_levels) - 1 );
+	nodes.resize( (pow(pow(2,number_of_dimensions),number_of_levels) - 1) / ( pow(2,number_of_dimensions) -1) );
 
+    // Initialize root node
 	nodes[0] = new node();  // root
+	nodes[0]->children.resize( pow(2,number_of_dimensions) );
 	nodes[0]->scalar = 0.0;
 
-	// For each node, creates 2 new nodes in the vector and allocates
-	// them to it's left and right.
+	std::cout << "Creating tree with " << nodes.size() << " nodes" << std::endl;
+
+	// For i... Go through each level except leaf level to create nodes
+	//   For j...  Each level has 2^Ndimensions^levels nodes
+	//     For k... Creates 2^Ndimensions children for each node
 	for( int i = 0; i < number_of_levels-1; i++ ){
-		for( int j = 0; j < pow(2,i); j++ ){
-			nodes[(pow(2,i)-1+j)*2 + 1]	   = new node();
-			nodes[(pow(2,i)-1+j)*2 + 2]	   = new node();
+		for( int j = 0; j < pow( pow(2,number_of_dimensions),i); j++ ){
+			for ( int k = 0; k < pow(2,number_of_dimensions); k++ ){
 
-			nodes[pow(2,i)-1+j]->left      = nodes[(pow(2,i)-1+j)*2 + 1];
-			nodes[pow(2,i)-1+j]->right     = nodes[(pow(2,i)-1+j)*2 + 2];
+				int indexOfCurrentParent = (pow(pow(2,number_of_dimensions),i) - 1) / ( pow(2,number_of_dimensions) -1) + j;
+				int indexOfCreatedChild  = indexOfCurrentParent * pow(2,number_of_dimensions) + 1 + k;
+				
+				// Debug output
+				//std::cout << " level: " << i << " indexOfCurrentParent: " << indexOfCurrentParent 
+				//          << " child: " << indexOfCreatedChild  << std::endl;
 
-			nodes[pow(2,i)-1+j]->left->scalar  = (pow(2,i)-1+j)*2 + 1; // temp value to keep track
-			nodes[pow(2,i)-1+j]->right->scalar = (pow(2,i)-1+j)*2 + 2; // of nodes
+				nodes[indexOfCreatedChild] = new node();
+				nodes[indexOfCreatedChild]->children.resize( pow(2,number_of_dimensions) );
+				nodes[indexOfCreatedChild]->scalar = indexOfCreatedChild;
+				
+				nodes[indexOfCurrentParent]->children[k] = nodes[indexOfCreatedChild];
+			}
 		}
 	}	
-
+	
 	//Initialize random seed
-	srand (time(NULL));
+	srand(time(NULL));
 }
 
 bool Tree::swap(size_t node_index){
 
-	// Evaluates if node is not leaf( level n) or first level tree (n-1)
-	if( node_index >= nodes.size()/4 ){
+	// Evaluates if node is not leaf(level n) or first level tree (n-1)
+	if( node_index >= nodes.size()/(2*pow(2,number_of_dimensions)) ){
 		return false;
 	}
 
-	// Get 2 random numbers
-	int randomA = rand()%2;
-	int randomB = rand()%2;
-
-	// Auxiliary node pointer for exchange
-	node *temp_node;
-
-	// 4 Scenarios of exchange are possible:
-	if ( randomA == 0 && randomB == 0 ){
-		temp_node                      = nodes[node_index]->left->left;	
-		nodes[node_index]->left->left  = nodes[node_index]->right->left;	
-		nodes[node_index]->right->left = temp_node;	
-		return true;
-	}
-
-	if ( randomA == 0 && randomB == 1 ){
-		temp_node                       = nodes[node_index]->left->left;	
-		nodes[node_index]->left->left   = nodes[node_index]->right->right;	
-		nodes[node_index]->right->right = temp_node;
-		return true;	
-	}
+	// Create array with four random numbers [0,2^N_dim]. 
+	// First two randoms cannot be the same 
+	int random_numbers[4] = { 0, 0, 0, 0 };
 	
-	if ( randomA == 1 && randomB == 0 ){
-		temp_node                      = nodes[node_index]->left->right;	
-		nodes[node_index]->left->right = nodes[node_index]->right->left;	
-		nodes[node_index]->right->left = temp_node;	
-		return true;
+	while(random_numbers[0] == random_numbers[1]){
+		random_numbers[0] = rand()%(int)pow(2,number_of_dimensions);
+		random_numbers[1] = rand()%(int)pow(2,number_of_dimensions);
+		random_numbers[2] = rand()%(int)pow(2,number_of_dimensions);
+		random_numbers[3] = rand()%(int)pow(2,number_of_dimensions);
 	}
 
-	if ( randomA == 1 && randomB == 1 ){
-		temp_node                       = nodes[node_index]->left->right;	
-		nodes[node_index]->left->right  = nodes[node_index]->right->right;	
-		nodes[node_index]->right->right = temp_node;
-		return true;
-	}
+	std::cout << random_numbers[0] << " "
+	          << random_numbers[1] << " "
+	          << random_numbers[2] << " "
+	          << random_numbers[3] << " " << std::endl;
 
-	return false;
+	node *grand_parent  = nodes[node_index];
+	
+	node *first_parent  = grand_parent->children[random_numbers[0]];
+	node *first_child   = first_parent->children[random_numbers[2]];
+
+	node *second_parent = grand_parent->children[random_numbers[1]];
+	node *second_child  = second_parent->children[random_numbers[3]];
+
+	std::cout << " first_parent : " << first_parent  << " " << std::endl; 
+	std::cout << " first_child  : " << first_child   << " " << std::endl;
+
+	std::cout << " second_parent: " << second_parent << " " << std::endl;
+	std::cout << " second_child : " << second_child  << " " << std::endl;
+
+
+	// Node exchange step, the two selected parents exchange their kids
+	first_parent->children[random_numbers[2]]  = second_child;
+	second_parent->children[random_numbers[3]] = first_child;
+
+	return true;
 }
 
 void Tree::randomSwap(){
 	
-	int r = rand()%(nodes.size()/4);
+	int r = rand()%(int)( nodes.size()/ (2*pow(2,number_of_dimensions)) );
 
-	cout << "Swap on node: "<< r << ", result: " << (this->swap(r) ? "sucess" : "failure") << endl;
+	std::cout << "Swap on node: "<< r << ", result: " << (this->swap(r) ? "sucess" : "failure") << std::endl;
 }
 
-void Tree::printtree(){
+void Tree::print(){
 
-	cout << "Printing tree with " << nodes.size() << " nodes" << endl;
+	std::cout << "Printing tree with " << nodes.size() << " nodes" << std::endl;
 
-	cout << nodes[0]->scalar << endl;
+	std::cout << nodes[0]->scalar << std::endl;
 
-	temp_nodes[0] = nodes[0];
+	std::vector<node*> temp_nodes(nodes);
 
 	for( int i = 0; i < number_of_levels-1; i++ ){
-		
-		for( int j = 0; j < pow(2,i); j++ ){
+		for( int j = 0; j < pow( pow(2,number_of_dimensions),i); j++ ){
+			for ( int k = 0; k < pow(2,number_of_dimensions); k++ ){
 
-			temp_nodes[pow(2,i+1)+j*2-1]   = temp_nodes[pow(2,i)-1+j]->left;
-			temp_nodes[pow(2,i+1)+j*2]     = temp_nodes[pow(2,i)-1+j]->right; 
+				int indexOfCurrentParent = (pow(pow(2,number_of_dimensions),i) - 1) / ( pow(2,number_of_dimensions) -1) + j;
+				int indexOfCurrentChild  = indexOfCurrentParent * pow(2,number_of_dimensions) + 1 + k;
 
-			cout << temp_nodes[pow(2,i+1)+j*2-1]->scalar  << " ";		
-			cout << temp_nodes[pow(2,i+1)+j*2]->scalar    << " ";
+				temp_nodes[indexOfCurrentChild] = temp_nodes[indexOfCurrentParent]->children[k];
+
+				std::cout << temp_nodes[indexOfCurrentParent]->children[k]->scalar << " ";
+			}
+
+			std::cout<< "  ";
 		}
 
-		cout << endl;
-	}
-
-
-	cout << endl << "finished printing tree" << endl;
+		std::cout<<std::endl;
+	}	
 }
+
