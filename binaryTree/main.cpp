@@ -10,12 +10,15 @@ int main(){
 
 	Tree *bintree = new Tree(dimensions,numberOfLevels);
 
-	bintree->print();
+	//bintree->print();
 	
-	bintree->randomSwap();
+	for(int i = 0; i<2; i++){
+		bintree->randomSwap();
+	}
 
-	bintree->print();
+	//bintree->print();
 
 	std::cout << "Program Finished" << std::endl;
+	
 	return 0;
 }
