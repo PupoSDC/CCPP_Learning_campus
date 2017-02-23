@@ -3,8 +3,11 @@
 #include <cstdio>
 #include <iostream>
 #include <stdlib.h>     
-#include <time.h>    
+#include <time.h>   
 #include "cell.h"
+
+//#define DEBUG
+#include "debug.h"
 
 class Tree {
 
@@ -14,27 +17,21 @@ class Tree {
 	};
 
 	std::vector<Tree_Cell*> nodes;
-	std::vector<     Cell*> leaves;
 
-	bool debug_mode = false;
-	int  number_of_levels;
-	int  number_of_dimensions;
+	size_t number_of_levels;
+	size_t number_of_dimensions;
+	size_t children_per_node;
 
-	void constructor(size_t number_of_dimensions, size_t number_of_levels, bool debug_mode);
-	bool swap(size_t node_index);
+	int  selectOneTargetNode();
+	bool importLeafRow(std::vector<Cell*>  input_leaf_row);
+	bool exportLeafRow(Cell *first_child, Cell *second_child);
 
 public:
 
 	Tree(size_t number_of_dimensions, size_t number_of_levels);
-	Tree(size_t number_of_dimensions, size_t number_of_levels, bool debug_mode);
 
-	void setDebugMode(bool debug_mode);
-	void importLeafRow(std::vector<Cell*>  input_leaf_row);
-	void exportLeafRow(std::vector<Cell*> target_leaf_row);
+	void createEddyEvent(std::vector<Cell*> field);
 
-	void randomSwap();
-
-	//void print();	
 };
 
 
